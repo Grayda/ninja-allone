@@ -37,10 +37,10 @@ app.log = {
 };
 
 
-console.log("Requiring");
+
 /* Here we require(aka import) our driver, and instantiate it with it's settings and a reference to the app */
 var driver = new (require('./index'))(opts, app);
-console.log("Requiring");
+
 /* 
  * All driver must be EventEmitters, therefore we can call 'on' to listen to its 'register' event,
  * where the driver provides a new device to be registered in the system. In the real client, we would
@@ -73,7 +73,12 @@ driver.on('register', function(device) {
     }
 
   if (device.D == 240) { // It's text display
-    device.write('Here is a test message!');
+    rl.setPrompt('Enter some raw IR to send ..\n');
+		  rl.prompt();
+		  rl.on('line', function(line) {
+			device.write(line);
+			rl.prompt();
+		  });
   }
 
 });
