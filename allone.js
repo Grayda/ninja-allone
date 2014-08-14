@@ -56,13 +56,14 @@ function OrviboAllOne() { // The main function in our module. AFAIK, this is aki
 	    if (remote.address != localIP) { //Check message isn't from us
 
 	        var MessageHex = new Buffer(message).toString('hex'); // Convert our message into a string of hex
+            
 			var macAddress = MessageHex.substr(MessageHex.indexOf('accf'), 12); // Look for the first occurance of ACCF (the start of our MAC address) and grab it, plus the next 12 bytes
 			var type;
 			
 			index = hosts.map(function(e) { return e.macaddress; }).indexOf(macAddress); // Use the arr.map() and indexOf functions to find out where in our array, our socket is
 
-			switch(MessageHex.substr(0,12)) { // Look for the first twelve bytes
-				case "686400297161": // We've asked for all sockets on the network, and smoeone has replied!
+			switch(MessageHex.substr(8,4)) { // Look for the first twelve bytes
+				case "7161": // We've asked for all sockets on the network, and smoeone has replied!
 					if(index == -1) { // If we haven't got this IP address in our host array yet..
 						hosts.push({ // Add it to our array
 							"name": "", // The name of our socket. We don't know it yet!
@@ -75,7 +76,7 @@ function OrviboAllOne() { // The main function in our module. AFAIK, this is aki
 					}
 					break;
 					
-				case "686400a47274": // We've queried the socket for the name, and we've got data coming back
+				case "7274": // We've queried the socket for the name, and we've got data coming back
 					if(hosts[index].name === "") { // If we haven't added the name of our socket to our array yet
 
 						var strName = MessageHex.split("202020202020")[4]; // We want everything after the fourth 202020202020 which is where our name starts
@@ -95,7 +96,7 @@ function OrviboAllOne() { // The main function in our module. AFAIK, this is aki
 					type = "Query response packet"; // Output the type of packet we've got (to make debugging outputs easier to read)
 					break;
 				
-				case "68640017636c": // We've asked to subscribe to a socket, and this is confirmation. It also includes the state of our socket (00 = off, 01 = on)
+				case "636c": // We've asked to subscribe to a socket, and this is confirmation. It also includes the state of our socket (00 = off, 01 = on)
                     
 					hosts[index].state = MessageHex.substr(MessageHex.length - 1,1) == 0 ? false : true; // Pull out the state from our socket and set it in our array
 					hosts[index].subscribed = true; // We've now properly subscribed, so set our subscribed property to true
@@ -103,7 +104,7 @@ function OrviboAllOne() { // The main function in our module. AFAIK, this is aki
 					type = "Subscription confirmation packet"; // Output the type of packet we've got (to make debugging outputs easier to read)
 					break;
 				
-				case '686400176463': // We've asked to turn the socket on or off, and this is the confirmation that it's been done
+				case '6463': // We've asked to turn the socket on or off, and this is the confirmation that it's been done
 					hosts[index].state = MessageHex.substr(MessageHex.length - 1,1) == 0 ? false : true; // Fetch our state from the packet and set it
 					if(hosts[index].state == true) { // If we're powering on
 						this.emit("poweredon", index, true); // Tell everyone we're powered on
@@ -113,13 +114,18 @@ function OrviboAllOne() { // The main function in our module. AFAIK, this is aki
 					type = "State change confirmation packet"; // Output the type of packet we've got (to make debugging outputs easier to read)
 					break;
 					
-				case '686400177366': // Something has changed the state of our socket (e.g. pressing the button on the socket or the app)
+				case '7366': // Something has changed the state of our socket (e.g. pressing the button on the socket or the app)
 					hosts[index].state = MessageHex.substr(MessageHex.length - 1,1) == 0 ? 0 : 1; // Extract the state, same as always
 					this.emit("statechanged", index, hosts[index].state); // Tell the world we've changed. Include our index and state
 					type = "External state change packet"; // Output the type of packet we've got (to make debugging outputs easier to read)
 
 					break;
-					
+				
+                case "6c73": // Learning mode received thingy!
+                    if(MessageHex.substr(4, 4) == 0018) { break; } // We don't need this message.
+                    this.enterLearnMode(index);
+                    this.emit("ircode", MessageHex.substr(12));
+                    break;
 				default: // For everything else
 					type = "Other type of packet"; // Output the type of packet we've got (to make debugging outputs easier to read)
 					break;
@@ -157,10 +163,10 @@ OrviboAllOne.prototype.discover = function(callback) { // To discover sockets, w
 OrviboAllOne.prototype.subscribe = function(callback) { // We've found a socket, now we just need to subscribe to it so we can control it.
 	hosts.forEach(function(item) { // // Loop through each found socket
 
-			macReversed = hex2ba(item.macaddress); // Convert our MAC address into a byte array (e.g. [0x12, 0x23] etc.)
+			macReversed = this.hex2ba(item.macaddress); // Convert our MAC address into a byte array (e.g. [0x12, 0x23] etc.)
 			macReversed = macReversed.slice().reverse(); // And reverse the individual sections (e.g. ACCF becomes CFAC etc.)
 		    payload = []; // Clear out our payload
-		    payload = payload.concat(['0x68', '0x64', '0x00', '0x1e', '0x63', '0x6c'], hex2ba(item.macaddress), twenties, macReversed, twenties); // The subscription packet
+		    payload = payload.concat(['0x68', '0x64', '0x00', '0x1e', '0x63', '0x6c'], this.hex2ba(item.macaddress), twenties, macReversed, twenties); // The subscription packet
 		    this.sendMessage(payload, item.ipaddress, function(){ // Send the message and when that's done..
 				this.emit("subscribing", index); // Let everyone know
 			}.bind(this)); 
@@ -174,9 +180,9 @@ OrviboAllOne.prototype.setState = function(index, state, callback) { // Here's w
 	if(hosts[index].subscribed == true) {
 		
 		if(state == true) {
-		    payload = payload.concat(['0x68', '0x64', '0x00', '0x17', '0x64', '0x63'], hex2ba(hosts[index].macaddress), twenties, ['0x00', '0x00', '0x00', '0x00', '0x01']); // ON
+		    payload = payload.concat(['0x68', '0x64', '0x00', '0x17', '0x64', '0x63'], this.hex2ba(hosts[index].macaddress), twenties, ['0x00', '0x00', '0x00', '0x00', '0x01']); // ON
 		} else {
-		     payload = payload.concat(['0x68', '0x64', '0x00', '0x17', '0x64', '0x63'], hex2ba(hosts[index].macaddress), twenties, ['0x00', '0x00', '0x00', '0x00', '0x00']); // OFF
+		     payload = payload.concat(['0x68', '0x64', '0x00', '0x17', '0x64', '0x63'], this.hex2ba(hosts[index].macaddress), twenties, ['0x00', '0x00', '0x00', '0x00', '0x00']); // OFF
 		}
 
 	    this.sendMessage(payload, hosts[index].ipaddress, function(){
@@ -193,7 +199,7 @@ OrviboAllOne.prototype.query = function(callback) { // Query all subscribed sock
 
 		if(item.subscribed == true) { // We can only query if we're subscribing
 			payload = [];
-			payload = payload.concat(['0x68', '0x64', '0x00', '0x1d', '0x72', '0x74'], hex2ba(item.macaddress), twenties, ['0x00', '0x00', '0x00', '0x00', '0x04', '0x00', '0x00', '0x00', '0x00', '0x00', '0x00']);
+			payload = payload.concat(['0x68', '0x64', '0x00', '0x1d', '0x72', '0x74'], this.hex2ba(item.macaddress), twenties, ['0x00', '0x00', '0x00', '0x00', '0x04', '0x00', '0x00', '0x00', '0x00', '0x00', '0x00']);
 			this.sendMessage(payload, hosts[index].ipaddress, function() {
 				this.emit('querying', index); // Tell the world we're querying the sockets for their name
 				
@@ -203,6 +209,15 @@ OrviboAllOne.prototype.query = function(callback) { // Query all subscribed sock
 		}
 	}.bind(this));
 	if(typeof callback === "function") { callback(); }
+}
+
+OrviboAllOne.prototype.enterLearnMode = function(index) {
+    payload = [];
+    payload = payload.concat(['0x68', '0x64', '0x00', '0x18', '0x6c', '0x73'], this.hex2ba(hosts[index].macaddress), twenties, ['0x01', '0x00', '0x00', '0x00', '0x00', '0x00']);
+    this.sendMessage(payload, hosts[index].ipaddress, function() {
+        this.emit('learning', index); // Tell the world we're querying the sockets for their name
+    }.bind(this));
+    // 686400186c73accf232a5ffa202020202020010000000000
 }
 		
 
@@ -249,7 +264,7 @@ function getBroadcastAddress() { // A bit of code that lets us get our network I
 	return addresses;
 }
 
-function hex2ba(hex) { // Takes a string of hex and turns it into a byte array: ['0xAC', '0xCF] etc.
+OrviboAllOne.prototype.hex2ba = function(hex) { // Takes a string of hex and turns it into a byte array: ['0xAC', '0xCF] etc.
     arr = []; // New array
 	for (var i = 0; i < hex.length; i += 2) { // Loop through our string, jumping by 2 each time
 	    arr.push("0x" + hex.substr(i, 2)); // Push 0x and the next two bytes onto the array
