@@ -1,0 +1,34 @@
+{
+  "name": "ninja-allone",
+  "version": "0.0.0",
+  "description": "A driver for the Ninja Block that allows you to control an Orvibo AllOne and emit IR to control TVs, air conditioners and such",
+  "main": "index.js",
+  "directories": {
+    "test": "tests"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "http://github.com/Grayda/ninja-allone"
+  },
+  "keywords": [
+    "allone",
+    "orvibo",
+    "ir",
+    "blaster",
+    "emitter",
+    "universal",
+    "remote"
+  ],
+  "author": "David \"Grayda\" Gray",
+  "license": "MIT",
+  "gitHead": "8db5d0e32b8bb7a45ae48905200b522eed97d1e4",
+  "bugs": {
+    "url": "https://github.com/Grayda/ninja-allone/issues"
+  },
+  "dependencies": {
+    "underscore.string": "~2.3.3"
+  }
+}
