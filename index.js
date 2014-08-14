@@ -1,7 +1,7 @@
-var Device = require('./lib/device')
-  , util = require('util')
+var util = require('util')
   , stream = require('stream')
-  , configHandlers = require('./lib/config-handlers');
+  , configHandlers = require('./lib/config-handlers')
+  , OrviboAllOne = require("./lib/allone.js");
 
 // Give our driver a stream interface
 util.inherits(myDriver,stream);
@@ -9,10 +9,16 @@ util.inherits(myDriver,stream);
 // Our greeting to the user.
 var HELLO_WORLD_ANNOUNCEMENT = {
   "contents": [
-    { "type": "heading",      "text": "Hello World Driver Loaded" },
-    { "type": "paragraph",    "text": "The hello world driver has been loaded. You should not see this message again." }
+    { "type": "heading",      "text": "Orvibo AllOne Driver Loaded" },
+    { "type": "paragraph",    "text": "The Orvibo AllOne Driver has been loaded. Please use the config menu to learn and add new IR codes" }
   ]
 };
+
+var orvibo = new OrviboAllOne(); // The main class that controls our sockets
+var devices = []; // The AllOne devices we've discovered
+var dTimer; // A timer that repeats orvibo.discovery() until something is found. 
+var stTimer; // A timer that repeats a setState command until it's changed.
+var suTimer; // A timer that repeats the subscription command until we get a subscription back
 
 /**
  * Called when our client starts up
@@ -44,8 +50,61 @@ function myDriver(opts,app) {
       self.save();
     }
 
-    // Register a device
-    self.emit('register', new Device());
+    orvibo.on('ready', function() { // We're ready to begin looking for sockets.
+		console.log("Driver prepared, discovering sockets .."); 
+		dTimer = setInterval(function() { // Sometimes the data won't send right away and we have to try a few times before the packet will leave
+			console.log("Trying to discover sockets ..");
+			orvibo.discover();
+		 }, 2000); // preparation is complete. Start discovering sockets!
+
+		setInterval(function() { // We need to subscribe every so often to keep control of the socket. This code calls subscribe() every 4 minutes
+			console.log("Resubscribing to sockets ..");
+			orvibo.subscribe();
+	    },240000);
+		 
+		 setInterval(function() { // Every minute we want to scan for new sockets
+			 console.log("Discovering new sockets..");
+			 orvibo.discover();
+		 }, 60000);
+	});
+	
+	orvibo.on('allonefound', function(index) { 
+		clearInterval(dTimer);
+		console.log("Socket found! Index is " + index + ". IP address is " + orvibo.hosts[index].ipaddress + ". MAC address is: " + orvibo.hosts[index].macaddress + ". Subscribing .."); 
+		orvibo.subscribe();
+		orvibo.discover();
+	}) // We've found a socket. Subscribe to it if we haven't already!
+		
+	orvibo.on('subscribed', function(index) { 
+		console.log("Socket index " + index + " successfully subscribed. Querying ..");
+		this.emit('data', '');
+		orvibo.query(); 
+	}); // We've subscribed to our device. Now we need to grab its name!
+	
+	orvibo.on('messagereceived', function(message, host) {
+		// console.log("Message from " + host + ": " + message.toString('hex'));
+	});
+	
+	orvibo.on('queried', function(index, name) {
+		console.log("Socket " + index + " has a name. It's " + name);
+		clearInterval(dTimer);	
+		// Register a device
+		process.nextTick(function() {
+			console.log("Registering new socket ..");
+
+			devices.push(new Device(index, name, orvibo.hosts[index].macaddress));
+		    self.emit('register', devices[devices.length - 1]);
+
+		});
+
+	});
+	
+	orvibo.on('messagereceived', function(message) {
+		// console.log("Message length: " + message.toString('hex').length);
+	});
+	
+	console.log("Preparing driver ..");
+	orvibo.prepare(); // Get ready to start finding sockets
   });
 };
 
@@ -76,6 +135,68 @@ myDriver.prototype.config = function(rpc,cb) {
   }
 };
 
+// Give our device a stream interface
+util.inherits(Device,stream);
+
+// Export it
+module.exports=Device;
+
+/**
+ * Creates a new Device Object
+ *
+ * @property {Boolean} readable Whether the device emits data
+ * @property {Boolean} writable Whether the data can be actuated
+ *
+ * @property {Number} G - the channel of this device
+ * @property {Number} V - the vendor ID of this device
+ * @property {Number} D - the device ID of this device
+ *
+ * @property {Function} write Called when data is received from the Ninja Platform
+ *
+ * @fires data - Emit this when you wish to send data to the Ninja Platform
+ */
+function Device(index, dName, macaddress) {
+
+  var self = this;
+
+  // This device will emit data
+  this.readable = true;
+  // This device can be actuated
+  this.writeable = true;
+
+  this.G = "allone" + macaddress; // G is a string a represents the channel. 
+  this.V = 0; // 0 is Ninja Blocks' device list
+  this.D = 240; // Text driver
+  this.name = dName
+  this.id = index;
+  process.nextTick(function() {
+
+    self.emit('data','');
+  });
+};
+
+
+/**
+ * Called whenever there is data from the Ninja Platform
+ * This is required if Device.writable = true
+ *
+ * @param  {String} data The data received
+ */
+Device.prototype.write = function(data) {
+id = this.id;
+  try {
+		if(orvibo.hosts[this.id].subscribed == true) {
+			orvibo.emitIR(this.id, data);
+		devices[this.id].emit('data', data);
+		} else {
+			console.log("Not subscribed. Discovering ..");
+			orvibo.discover();
+		}
+	} catch(ex) {
+		console.log("Error writing data: " + ex.message);		
+	}
+    
+};
 
 // Export it
 module.exports = myDriver;
