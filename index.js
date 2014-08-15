@@ -84,7 +84,8 @@ function myDriver(opts,app) {
 	orvibo.on('messagereceived', function(message, host) {
 		// console.log("Message from " + host + ": " + message.toString('hex'));
 	});
-	
+      
+   
 	orvibo.on('queried', function(index, name) {
 		console.log("Socket " + index + " has a name. It's " + name);
 		clearInterval(dTimer);	
@@ -98,6 +99,8 @@ function myDriver(opts,app) {
 		});
 
 	});
+      
+       
 	
 	orvibo.on('messagereceived', function(message) {
 		// console.log("Message length: " + message.toString('hex').length);
@@ -173,6 +176,12 @@ function Device(index, dName, macaddress) {
 
     self.emit('data','');
   });
+    
+    orvibo.on('ircode', function(index, data) {
+      self.emit('data', data);
+           
+    }.bind(this));
+	
 };
 
 
@@ -185,18 +194,23 @@ function Device(index, dName, macaddress) {
 Device.prototype.write = function(data) {
 id = this.id;
   try {
+      if(data == "LEARN") {
+          orvibo.enterLearningMode(this.id);
+          
+      } else {
 		if(orvibo.hosts[this.id].subscribed == true) {
-			orvibo.emitIR(this.id, data);
-		devices[this.id].emit('data', data);
+		  orvibo.emitIR(this.id, data);
+		  devices[this.id].emit('data', data);
 		} else {
 			console.log("Not subscribed. Discovering ..");
 			orvibo.discover();
 		}
+      }
 	} catch(ex) {
 		console.log("Error writing data: " + ex.message);		
 	}
-    
-};
+  }
+
 
 // Export it
 module.exports = myDriver;
