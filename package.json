@@ -1,7 +1,7 @@
 {
   "name": "ninja-allone",
-  "version": "0.0.0",
-  "description": "A driver for the Ninja Block that allows you to control an Orvibo AllOne and emit IR to control TVs, air conditioners and such",
+  "version": "0.2.0",
+  "description": "A driver for the Ninja Block that allows you to control an Orvibo AllOne and S10 sockets, allowing you to emit IR to control TVs, air conditioners and such, and turn appliances off and on",
   "main": "index.js",
   "directories": {
     "test": "tests"
@@ -20,7 +20,11 @@
     "blaster",
     "emitter",
     "universal",
-    "remote"
+    "remote",
+	"socket",
+	"s10",
+	"s20",
+	"wiwo"
   ],
   "author": "David \"Grayda\" Gray",
   "license": "MIT",

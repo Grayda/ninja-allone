@@ -62,13 +62,13 @@ driver.on('register', function(device) {
 	       device.write(x=!x);
 	    }, 5000);
 	  } else {
-		  console.log("The var autoToggle is set to false in test.js. If you want this test to toggle your relay every 2 seconds, please set it to true!");
+		 /* console.log("The var autoToggle is set to false in test.js. If you want this test to toggle your relay every 2 seconds, please set it to true!");
 		  rl.setPrompt('Press a key to toggle ..\n');
 		  rl.prompt();
 		  rl.on('line', function(line) {
 			device.write(x=!x);
 			rl.prompt();
-		  });
+		  });*/
 	  }
     }
 
