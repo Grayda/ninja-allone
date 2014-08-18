@@ -6,7 +6,7 @@ Ninja Blocks driver for the Orvibo AllOne IR blaster. Control your TV, air condi
 Installation
 ============
 
- 1. Set up your AllOne any any S10 sockets you have via the WiWo / SmartPoint apps (this driver assumes you're all set up and ready to go)
+ 1. Set up your AllOne and any S10 sockets you have via the WiWo / SmartPoint apps (this driver assumes you're all set up and ready to go)
  2. SSH into your Ninja Block and head to your driver directory
  3. Run this command: `git clone http://github.com/Grayda/ninja-allone && cd ninja-allone && npm install && restartninja`
  4. Reload your dashboard and any AllOne devices detected will show up.
