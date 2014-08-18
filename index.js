@@ -175,7 +175,7 @@ function Device(index, dName, macaddress, type) { // Check out the self.emit('re
     this.D = 240; // Otherwise, device will be a Text driver
   } else if(type == "button") {
     this.writeable = false;      
-    this.name = dName + "button" // The name of our socket      
+    this.name = dName + " button" // The name of our socket      
     this.D = 5; // Otherwise, device will be a Text driver      
   }
   
@@ -183,11 +183,10 @@ function Device(index, dName, macaddress, type) { // Check out the self.emit('re
   this.id = index; // And the index of our socket (which can be passed to Device.write below
     
     orvibo.on('ircode', function(index, data) { // We were in learning mode and have received some IR data back!
-      devices[index].emit('data', data); // Emit it. Remember that devices[index] is an array that holds all our registered devices
+      devices[this.id].emit('data', data); // Emit it. Remember that devices[index] is an array that holds all our registered devices
     }.bind(this));
     
     orvibo.on('buttonpress', function(index) { // We've pressed the physical (reset) button on top of the AllOne and we've got some data back
-       
        devices[this.id].emit('data', false); 
     }.bind(this));
         
