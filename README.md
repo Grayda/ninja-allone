@@ -26,10 +26,11 @@ Please note that it's not possible to control your Ninja Block using an IR remot
 To-Do
 =====
 
-~~* Allow saving and replay of learned IR codes (in progress)~~ Not possible due to limitations in the 433mhz widget, but research still ongoing
+* ~~Allow saving and replay of learned IR codes (in progress)~~ Not possible due to limitations in the 433mhz widget, but research still ongoing
 * Test with more than one AllOne
-~~* Roll the ninja-orvibo code into this for maximum socketness and blastering!~~
+* ~~Roll the ninja-orvibo code into this for maximum socketness and blastering!~~
 * Write an emulator for this device (?)
+* Rename this project / merge it in with the ninja-orvibo driver, as this driver is no longer just about the AllOne
 
 Supporting development
 ======================
