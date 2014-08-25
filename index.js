@@ -91,12 +91,13 @@ function myDriver(opts,app) {
 		clearInterval(dTimer); // Stop looking for new sockets. This is a bit of a safety net to ensure we're not searching when we're not supposed to.
 		// Register a device
 		process.nextTick(function() { // We want to ensure this line runs, so we stick it in the nextTick function
-            if(type == "allone") { // If it's an AllOne, we need to have a push button (as a text_display driver doesn't let you test via the "Equality" rule element :\
-			      devices.push(new Device(index, name, orvibo.hosts[index].macaddress, "button")); // Register a new push button
-		          self.emit('register', devices[devices.length - 1]); // And let the world know we've got a new device!                
-            }
-			devices.push(new Device(index, name, orvibo.hosts[index].macaddress, type)); // Add a new device to our devices array
+            devices.push(new Device(index, name, orvibo.hosts[index].macaddress, type)); // Add a new device to our devices array
 		    self.emit('register', devices[devices.length - 1]); // And let the world know we've got a new device!
+            if(type == "allone") { // If it's an AllOne, we need to have a push button (as a text_display driver doesn't let you test via the "Equality" rule element :\
+			      devices[index].button = new Device(index, name, orvibo.hosts[index].macaddress, "button"); // Register a new push button
+		          self.emit('register', devices[index].button); // And let the world know we've got a new device!                
+            }
+			
             orvibo.subscribe(); // Subscribe again, just in case. 
 		});
 	});
@@ -183,15 +184,19 @@ function Device(index, dName, macaddress, type) { // Check out the self.emit('re
   this.id = index; // And the index of our socket (which can be passed to Device.write below
     
     orvibo.on('ircode', function(index, data) { // We were in learning mode and have received some IR data back!
-      devices[this.id].emit('data', data); // Emit it. Remember that devices[index] is an array that holds all our registered devices
+      devices[index].emit('data', data); // Emit it. Remember that devices[index] is an array that holds all our registered devices
     }.bind(this));
     
     orvibo.on('buttonpress', function(index) { // We've pressed the physical (reset) button on top of the AllOne and we've got some data back
-       devices[this.id].emit('data', false); 
+       devices[index].button.emit('data', false); 
     }.bind(this));
         
     orvibo.on('statechanged', function(index, state) { // Our socket has changed state, so emit the data so the dashboard can keep up
-        devices[index].emit('data', state);  
+        try {
+            devices[index].emit('data', state);  
+        } catch(ex) {
+            
+        }
     }.bind(this));
     
     if(type == "socket") { // If we've got a socket
