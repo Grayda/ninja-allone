@@ -16,6 +16,16 @@ o.hosts =
 			ready: false,
             type: "allone"
 		},
+        { 
+			index: 1,
+			name: "Faded Bad",
+			macAddress: "accffadedbad",
+			icon: "01",
+			state: "01",
+			remote: '',
+			ready: false,
+            type: "socket"
+		},
 	
 	];
 			

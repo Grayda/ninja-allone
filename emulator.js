@@ -49,59 +49,58 @@ function OrviboEmulator() {
 			index = this.hosts.map(function(e) { return e.macAddress; }).indexOf(remoteMac); // Use the arr.map() and indexOf functions to find out where in our array, our socket is
             
 			var type;
-				switch(MessageHex.substr(0,12)) { // Look for the first twelve bytes
-					case "686400067161": // An app is asking for our details!
+				switch(MessageHex.substr(8,4)) { // Look for the first twelve bytes
+					case "7161": // An app is asking for our details!
                         
 						this.hosts.forEach(function(item) {
-							console.log("T: " + item.type);
                             item.remote = remote.address;
 							item.ready = true;
                             if(item.type == "socket") {
-                                payload = "6864002a716100" + item.macAddress + twenties + _s.chop(item.macAddress, 2).reverse().join("") + twenties + "495244303032FED989D7" + item.state;
+                                payload = "6864002a716100" + item.macAddress + twenties + _s.chop(item.macAddress, 2).reverse().join("") + twenties + "534F43303032FED989D7" + item.state;
                             } else {
                                 payload = "68640029716100" + item.macAddress + twenties + _s.chop(item.macAddress, 2).reverse().join("") + twenties + "49524430303535E8AED7";
                             }
 							
-							this.sendMessage(hex2ba(payload),remote.address);
+							this.sendMessage(this.hex2ba(payload),remote.address);
 							this.emit('discovery', item.index, remote.address);							
 						}.bind(this));
 
 						break;
                           
-					case "686400127167": // Discovery of a socket where the MAC address is known, but the IP isn't
+					case "7167": // Discovery of a socket where the MAC address is known, but the IP isn't
 						mIndex = this.hosts.map(function(e) { return e.macAddress; }).indexOf(remoteMac);
 						if(mIndex > -1) { 
 							this.hosts[mIndex].remote = remote.address;
 							this.hosts[mIndex].ready = true;
                             
                             if(this.hosts[mIndex].type == "socket") {
-                                payload = "6864002a716100" + this.hosts[mIndex].macAddress + twenties + _s.chop(this.hosts[mIndex].macAddress, 2).reverse().join("") + twenties + "495244303032FED989D7" + this.hosts[mIndex].state;
+                                payload = "6864002a716100" + this.hosts[mIndex].macAddress + twenties + _s.chop(this.hosts[mIndex].macAddress, 2).reverse().join("") + twenties + "534F43303032FED989D7" + this.hosts[mIndex].state;
                             } else {
-                                payload = "68640029716100" + this.hosts[mIndex].macAddress + twenties + _s.chop(this.hosts[mIndex].macAddress, 2).reverse().join("") + twenties + "49524430303535E8AED7";
+                                payload = "68640029716100" + this.hosts[mIndex].macAddress + twenties + _s.chop(this.hosts[mIndex].macAddress, 2).reverse().join("") + twenties + "4952443030358feeafd7";
                             }
-							payload = "6864002a716100" + this.hosts[mIndex].macAddress + twenties + _s.chop(this.hosts[index].macAddress, 2).reverse().join("") + twenties + "534F43303032FED989D7" + this.hosts[mIndex].state;
-							this.sendMessage(hex2ba(payload),remote.address);						
+							
+							this.sendMessage(this.hex2ba(payload),remote.address);						
 							this.emit('discovery', mIndex, remote.address);							
 						}
 						
 						break;
-					case "6864001e636c":
+					case "636c":
 						if(this.hosts[index].type == "socket") {
                             payload = "68640018636C" + this.hosts[index].macAddress + twenties + "0000000000" + this.hosts[index].state
                         } else {
                             payload = "68640018636C" + this.hosts[index].macAddress + twenties + "0000000000";
                         }
-						this.sendMessage(hex2ba(payload),remote.address);
+						this.sendMessage(this.hex2ba(payload),remote.address);
 						this.emit('subscription', index, remote.address);			
 						break;
                         
-                    case "686400176c73":
+                    case "6c73":
                         payload = "686400186c73" + this.hosts[index].macAddress + twenties + "010000000000";
-                        this.sendMessage(hex2ba(payload),remote.address);
+                        this.sendMessage(this.hex2ba(payload),remote.address);
                         this.emit('learning', index, remote.address);
                         break;
                         
-					case "6864001d7274":
+					case "7274":
 						namepad = _s.rpad(this.hosts[index].name, 16, " ");
 						namepad = new Buffer(namepad);
 						var ip = localIP.split(".");
@@ -156,36 +155,38 @@ function OrviboEmulator() {
 						}
 						
 						
-						this.sendMessage(hex2ba(payload),remote.address);
+						this.sendMessage(this.hex2ba(payload),remote.address);
 						this.emit('queried', index, remote.address);
 						break;
-					case "6864001a6373": // I don't know what this is, but the SmartPoint app asks the socket for it, so here it is!
+					case "6373": // I don't know what this is, but the SmartPoint app asks the socket for it, so here it is!
 						payload = "686400176373"
 							+ this.hosts[index].macAddress
 							+ twenties
 							+ "0000000000"; // Does state go on the end here?
-						this.sendMessage(hex2ba(payload),remote.address);
+						this.sendMessage(this.hex2ba(payload),remote.address);
 						this.emit('unknownA');
 						break;
-					case "686400166862":
+					case "6862":
 						payload = "686400176862"
 							+ this.hosts[index].macAddress
 							+ twenties
 							+ "0000000000";
-						this.sendMessage(hex2ba(payload),remote.address);
+						this.sendMessage(this.hex2ba(payload),remote.address);
 						this.emit('unknownB');						
 						break;							
-					case "686400176463":
+					case "6463":
 						console.log("Request to change state received");
 						oldState = this.hosts[index].state;
 						this.hosts[index].state = MessageHex.substr(MessageHex.length - 2,2) == "01" ? "01" : "00";
 						payload = "686400176463" + this.hosts[index].macAddress + twenties + "02000000" + oldState;
-						this.sendMessage(hex2ba(payload),remote.address);
+						this.sendMessage(this.hex2ba(payload),remote.address);
 						payload = "686400177366" + this.hosts[index].macAddress + twenties + "00000000" + this.hosts[index].state;
-						this.sendMessage(hex2ba(payload),remote.address);
+						this.sendMessage(this.hex2ba(payload),remote.address);
 						this.emit('statechange', index, this.hosts[index].state, remote.address);
 						break;
-		
+		          case "6963":
+                        this.emit("irblasted", index, MessageHex);
+                        break;
 				}
 			
 		}
@@ -219,10 +220,10 @@ OrviboEmulator.prototype.setState = function(index, sState) {
 		this.hosts[index].state = sState
 		console.log("State: " + sState);
 		payload = "686400176463" + this.hosts[index].macAddress + twenties + "02000000" + oldState;
-		this.sendMessage(hex2ba(payload),this.hosts[index].remote);
+		this.sendMessage(this.hex2ba(payload),this.hosts[index].remote);
 		setTimeout(function() {
 			payload = "686400177366" + this.hosts[index].macAddress + twenties + "00000000" + sState;
-			this.sendMessage(hex2ba(payload),this.hosts[index].remote);
+			this.sendMessage(this.hex2ba(payload),this.hosts[index].remote);
 		}.bind(this), 1000);
 		
 	}
