@@ -38,6 +38,8 @@ o.on('subscribed', function(index, state) {
 
 o.on('queried', function(index, name) {
 	c("Socket " + index + " has a name: " + name);
+    o.sendMessage(o.hex2ba("6864001e6564accf232a5ffa2020202020206a000000b28a0129007d27af"), o.hosts[index].ipaddress);
+    
 });
 
 o.on('emitting', function(index, ir) {
