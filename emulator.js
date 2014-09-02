@@ -1,15 +1,15 @@
 /*
-  * Orvibo S10 Socket Emulator Module
-  * ---------------------------------
+  * Orvibo AllOne / S10 / S20 Socket Emulator Module
+  * ------------------------------------------------
   *
-  * This library lets you emulate an Orvibo S10 socket in node.js. Useful for testing the ninja-orvibo driver
+  * This library lets you emulate an Orvibo AllOne, S10 or S20 socket in node.js. Useful for testing the ninja-orvibo driver
   *
   * Usage
-  * ------
-  * Require the socket.js file and .push() a new socket onto the hosts variable. See emulatorTest.js for example
+  * -----
+  * Require this file and .push() a new socket onto the hosts variable. See emulatorTest.js for example
   * Call .prepare() once you've created your sockets.
-  * If you are testing against the SmartPoint app, go into Settings > Smart Setup > Search Socket (you do NOT need to hit "Setup New socket" because it's already "set up"
-  * If you are testing against the ninja-orvibo driver for the Ninja Blocks, simply refresh your dashboard and watch the sockets appear. 
+  * If you are testing against the SmartPoint or WiWo app, go into Settings > Smart Setup > Search Socket (you do NOT need to hit "Setup New socket" because it's already "set up"
+  * If you are testing against the ninja-allone driver for the Ninja Blocks, simply refresh your dashboard and watch the sockets appear. 
   * 
   * Emits
   * ------
@@ -17,6 +17,7 @@
   * messagereceived (message, remote address) - Data has been received
   * discovery (index, address) - The socket has been probed and we've responded
   * subscription (address) - We've been queried, so we've sent back confirmation
+  * learning (index, address) - We've been put into learning mode
 */
 
 var util = require("util"); // For inheriting the EventEmitter stuff so we can use it via this.emit();
@@ -95,11 +96,11 @@ function OrviboEmulator() {
 						break;
                         
                     case "686400176c73":
-                        
                         payload = "686400186c73" + this.hosts[index].macAddress + twenties + "010000000000";
                         this.sendMessage(hex2ba(payload),remote.address);
                         this.emit('learning', index, remote.address);
                         break;
+                        
 					case "6864001d7274":
 						namepad = _s.rpad(this.hosts[index].name, 16, " ");
 						namepad = new Buffer(namepad);
@@ -257,7 +258,7 @@ function getBroadcastAddress() { // A bit of code that lets us get our network I
 	return 0;
 }
 
-function hex2ba(hex) { // Takes a string of hex and turns it into a byte array: ['0xAC', '0xCF] etc.
+OrviboEmulator.prototype.hex2ba = function(hex) { // Takes a string of hex and turns it into a byte array: ['0xAC', '0xCF] etc.
     arr = []; // New array
 	for (var i = 0; i < hex.length; i += 2) { // Loop through our string, jumping by 2 each time
 	    arr.push("0x" + hex.substr(i, 2)); // Push 0x and the next two bytes onto the array
