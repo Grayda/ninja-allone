@@ -11,7 +11,7 @@ o.hosts =
 			name: "Dead Beef",
 			macAddress: "accfdeadbeef",
 			icon: "01",
-			state: "01",
+			state: "",
 			remote: '',
 			ready: false,
             type: "allone"
@@ -26,6 +26,16 @@ o.hosts =
 			ready: false,
             type: "socket"
 		},
+        { 
+			index: 2,
+			name: "The Fab Three",
+			macAddress: "accfabfabfab",
+			icon: "01",
+			state: "",
+			remote: '',
+			ready: false,
+            type: "allone"
+		},
 	
 	];
 			
@@ -39,17 +49,41 @@ console.dir(o.hosts);
 
 o.prepare();
 count = o.hosts.length - 1;
-rl.setPrompt('Enter an index to toggle (0 to ' + count.toString() + ")");
+rl.setPrompt('Enter a command or type help to see list of available commands');
 rl.prompt();
 rl.on('line', function(line) {
 	try {
-		if(line == "status") { 
-			console.log("State of sockets:");
-			console.dir(o.hosts); 
-		} else {
-			console.log("Changing state of socket: " + parseInt(line));
-			o.setState(parseInt(line), o.hosts[parseInt(line)].state == "00" ? "01" : "00");
-		}
+        line = line.split(" ");
+    
+        switch(line[0]) {
+            case "status":
+                console.log("Status of virtual devices:");
+                console.dir(o.hosts);
+                break;
+            case "learn":
+                console.log("Entering learning mode ..");
+                o.enterLearningMode(line[1]);
+                break;
+            case "toggle":
+                console.log("Toggling socket #" + line[1]);
+                o.setState(parseInt(line[1]), o.hosts[parseInt(line[1])].state == "00" ? "01" : "00");
+                break;
+            case "button":
+                o.sendMessage(o.hex2ba("686400176469" + o.hosts[parseInt(line[1])].macAddress + "2020202020200000000000"), o.hosts[parseInt(line[1])].remote);
+                break;
+            case "help":
+                console.log("Available commands:");
+                console.log("status - Displays the status of all emulated devices");
+                console.log("learn [index] - Puts an AllOne into learn mode. Example: learn 0");
+                console.log("toggle [index] - Toggles a socket on or off. Example: toggle 1");
+                console.log("button [index] - Simulate a button press on an AllOne. Example: button 0");
+                break;
+            default:
+                console.log("Unknown command. Type help to see list of available commands");
+                break;
+            
+        }
+		
 	} catch(ex) {
 		console.log("Error setting state. Error was: " + ex);	
 	}
