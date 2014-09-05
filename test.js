@@ -30,13 +30,11 @@ app.opts = {apiHost: 'wakai.ninja', hasSentAnnouncement: false};
 
 /* In client, the log is provided by log4js, but to save the dependency, I just map console log :) */
 app.log = {
-    debug: console.log,
-    info: console.log,
-    warn: console.log,
-    error: console.log
+  debug: console.log,
+  info: console.log,
+  warn: console.log,
+  error: console.log
 };
-
-
 
 /* Here we require(aka import) our driver, and instantiate it with it's settings and a reference to the app */
 var driver = new (require('./index'))(opts, app);
@@ -49,7 +47,7 @@ var driver = new (require('./index'))(opts, app);
 driver.on('register', function(device) {
   console.log('Driver.register', device);
   device.on('data', function(value) {
-      console.log('Device.emit ', device.name, ' data:', value);
+    console.log('Device.emit ', device.name, ' data:', value);
   });
  
   // "D" is the device id, you can see a list of device ids here : http://ninjablocks.com/pages/device-ids
@@ -70,17 +68,16 @@ driver.on('register', function(device) {
 			rl.prompt();
 		  });*/
 	  }
-    }
+  }
 
   if (device.D == 240) { // It's text display
     rl.setPrompt('Enter some raw IR to send ..\n');
-		  rl.prompt();
-		  rl.on('line', function(line) {
+		rl.prompt();
+		rl.on('line', function(line) {
 			device.write(line);
 			rl.prompt();
-		  });
+		});
   }
-
 });
 
 driver.save = function() {
