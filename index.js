@@ -16,7 +16,9 @@ var ALLONE_WELCOME = {
 
 var orvibo = new OrviboAllOne(); // The main class that controls our sockets
 var devices = []; // The AllOne devices we've discovered
-var dTimer; // A timer that repeats orvibo.discovery() until something is found. 
+var dTimer; // A timer that repeats orvibo.discovery() until something is found.
+var rTimer; // A timer that repeats our subscribe function every 4 minutes
+var rdTimer; // A timer that rediscovers our sockets every minute
 
 /**
  * Called when our client starts up
@@ -36,6 +38,12 @@ function myDriver(opts,app) {
 
   var self = this;
 
+    
+  app.on('client::down',function(){ // Our block has gone down, so clear out the timers so when our block reconnects to the cloud, we won't get more setIntervals clogging up the system
+    clearInterval(rTimer);
+    clearInterval(dTimer);
+    clearInterval(rdTimer);
+  }
   app.on('client::up',function(){
 
     // The client is now connected to the Ninja Platform
@@ -53,11 +61,11 @@ function myDriver(opts,app) {
 			orvibo.discover();
 		 }, 2000); // preparation is complete. Start discovering sockets!
 
-		setInterval(function() { // We need to subscribe every so often to keep control of the socket. This code calls subscribe() every 4 minutes
+		rTimer = setInterval(function() { // We need to subscribe every so often to keep control of the socket. This code calls subscribe() every 4 minutes
 			orvibo.subscribe();
 	    },240000);
 		 
-		 setInterval(function() { // Every minute we want to scan for new sockets
+		 rdTimer = setInterval(function() { // Every minute we want to scan for new sockets
 			 orvibo.discover();
 		 }, 60000);
 	});
