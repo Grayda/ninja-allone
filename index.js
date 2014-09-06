@@ -60,6 +60,8 @@ function myDriver(opts,app) {
 		dTimer = setInterval(function() { // Sometimes the data won't send right away and we have to try a few times before the packet will leave
 			orvibo.discover();
 		 }, 2000); // preparation is complete. Start discovering sockets!
+        
+        setTimeout(function() { clearInterval(dTimer, 120000) }); // Stop our 2-second searching after 2 minutes if nothing was found.
 
 		rTimer = setInterval(function() { // We need to subscribe every so often to keep control of the socket. This code calls subscribe() every 4 minutes
 			orvibo.subscribe();
