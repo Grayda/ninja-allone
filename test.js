@@ -30,13 +30,11 @@ app.opts = {apiHost: 'wakai.ninja', hasSentAnnouncement: false};
 
 /* In client, the log is provided by log4js, but to save the dependency, I just map console log :) */
 app.log = {
-    debug: console.log,
-    info: console.log,
-    warn: console.log,
-    error: console.log
+  debug: console.log,
+  info: console.log,
+  warn: console.log,
+  error: console.log
 };
-
-
 
 /* Here we require(aka import) our driver, and instantiate it with it's settings and a reference to the app */
 var driver = new (require('./index'))(opts, app);
@@ -49,38 +47,37 @@ var driver = new (require('./index'))(opts, app);
 driver.on('register', function(device) {
   console.log('Driver.register', device);
   device.on('data', function(value) {
-      console.log('Device.emit ', device.name, ' data:', value);
+    console.log('Device.emit ', device.name, ' data:', value);
   });
  
   // "D" is the device id, you can see a list of device ids here : http://ninjablocks.com/pages/device-ids
   if (device.D == 238 || device.D == 1009) { // It's a relay
     if(autoToggle == true) {
-	    var x = false;
-	
-	    // When we see a relay device, write alternating true/false values to it every 5 seconds
-	    setInterval(function() {
-	       device.write(x=!x);
-	    }, 5000);
-	  } else {
-		 /* console.log("The var autoToggle is set to false in test.js. If you want this test to toggle your relay every 2 seconds, please set it to true!");
-		  rl.setPrompt('Press a key to toggle ..\n');
-		  rl.prompt();
-		  rl.on('line', function(line) {
-			device.write(x=!x);
-			rl.prompt();
-		  });*/
-	  }
+      var x = false;
+  
+      // When we see a relay device, write alternating true/false values to it every 5 seconds
+      setInterval(function() {
+         device.write(x=!x);
+      }, 5000);
+    } else {
+     /* console.log("The var autoToggle is set to false in test.js. If you want this test to toggle your relay every 2 seconds, please set it to true!");
+      rl.setPrompt('Press a key to toggle ..\n');
+      rl.prompt();
+      rl.on('line', function(line) {
+      device.write(x=!x);
+      rl.prompt();
+      });*/
     }
+  }
 
   if (device.D == 240) { // It's text display
     rl.setPrompt('Enter some raw IR to send ..\n');
-		  rl.prompt();
-		  rl.on('line', function(line) {
-			device.write(line);
-			rl.prompt();
-		  });
+    rl.prompt();
+    rl.on('line', function(line) {
+      device.write(line);
+      rl.prompt();
+    });
   }
-
 });
 
 driver.save = function() {
