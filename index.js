@@ -43,7 +43,8 @@ function myDriver(opts,app) {
     clearInterval(rTimer);
     clearInterval(dTimer);
     clearInterval(rdTimer);
-  }
+  });
+    
   app.on('client::up',function(){
 
     // The client is now connected to the Ninja Platform
