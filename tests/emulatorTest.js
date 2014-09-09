@@ -16,27 +16,7 @@ o.hosts =
 			ready: false,
             type: "allone"
 		},
-        { 
-			index: 1,
-			name: "Faded Bad",
-			macAddress: "accffadedbad",
-			icon: "01",
-			state: "01",
-			remote: '',
-			ready: false,
-            type: "socket"
-		},
-        { 
-			index: 2,
-			name: "The Fab Three",
-			macAddress: "accfabfabfab",
-			icon: "01",
-			state: "",
-			remote: '',
-			ready: false,
-            type: "allone"
-		},
-	
+        	
 	];
 			
 			
@@ -125,5 +105,5 @@ o.on('query', function() {
 
   
 o.on('sent', function(data, ip) {
-	console.log("Data SENT: " + data.toString('hex') + " to " + ip); 
+	// console.log("Data SENT: " + data.toString('hex') + " to " + ip); 
 });
