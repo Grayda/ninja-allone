@@ -93,6 +93,12 @@ function myDriver(opts,app) {
 		orvibo.discover(); // And search again in case we missed any devices before
         c("AllOne found! Initial subscription timer cancelled, subscription request made and new discovery packet sent")
 	});
+      
+      orvibo.on('discovered', function(index) {
+          clearInterval(dTimer); // Stop searching. 
+         c("Discovered a socket thing. Cancelling timer");
+          
+      });
     
     orvibo.on('socketfound', function(index) { // We've found a socket!
 		clearInterval(dTimer); // Stop searching.
