@@ -9,8 +9,8 @@
   * Require this file and .push() a new socket onto the hosts variable. See emulatorTest.js for example
   * Call .prepare() once you've created your sockets.
   * If you are testing against the SmartPoint or WiWo app, go into Settings > Smart Setup > Search Socket (you do NOT need to hit "Setup New socket" because it's already "set up")
-  * If you are testing against the ninja-allone driver for the Ninja Blocks, simply refresh your dashboard and watch the sockets appear. 
-  * 
+  * If you are testing against the ninja-allone driver for the Ninja Blocks, simply refresh your dashboard and watch the sockets appear.
+  *
   * Emits
   * ------
   * ready - The port is bound and is ready to accept incoming data
@@ -47,7 +47,7 @@ function OrviboEmulator() {
       this.emit('messagereceived', message, remote.address);
       var remoteMac = MessageHex.substr(MessageHex.indexOf('accf'), 12); // Look for the first occurance of ACCF (the start of our MAC address) and grab it, plus the next 12 bytes
       index = this.hosts.map(function(e) { return e.macAddress; }).indexOf(remoteMac); // Use the arr.map() and indexOf functions to find out where in our array, our socket is
-            
+
       var type;
       switch(MessageHex.substr(8,4)) { // Look for the first twelve bytes
         case "7161": // An app is asking for our details!
@@ -59,29 +59,29 @@ function OrviboEmulator() {
             } else {
               payload = "68640029716100" + item.macAddress + twenties + _s.chop(item.macAddress, 2).reverse().join("") + twenties + "49524430303535E8AED7";
             }
-            
+
             this.sendMessage(this.hex2ba(payload),remote.address);
-            this.emit('discovery', item.index, remote.address);              
+            this.emit('discovery', item.index, remote.address);
           }.bind(this));
 
           break;
 
         case "7167": // Discovery of a socket where the MAC address is known, but the IP isn't
           mIndex = this.hosts.map(function(e) { return e.macAddress; }).indexOf(remoteMac);
-          if(mIndex > -1) { 
+          if(mIndex > -1) {
             this.hosts[mIndex].remote = remote.address;
             this.hosts[mIndex].ready = true;
-    
+
             if(this.hosts[mIndex].type == "socket") {
-              payload = "6864002a716100" + this.hosts[mIndex].macAddress + twenties + _s.chop(this.hosts[mIndex].macAddress, 2).reverse().join("") + twenties + "534F43303032FED989D7" + this.hosts[mIndex].state;
+              payload = "6864002a716100" + this.hosts[mIndex].macAddress + twenties + _s.chop(this.hosts[mIndex].macAddress, 2).reverse().join("") + twenties + "534F43303032" + "FED989" + "D7" + this.hosts[mIndex].state;
             } else {
               payload = "68640029716100" + this.hosts[mIndex].macAddress + twenties + _s.chop(this.hosts[mIndex].macAddress, 2).reverse().join("") + twenties + "4952443030358feeafd7";
             }
-            
+
             this.sendMessage(this.hex2ba(payload),remote.address);
             this.emit('discovery', mIndex, remote.address);
           }
-          
+
           break;
         case "636c":
           if(this.hosts[index].type == "socket") {
@@ -90,13 +90,13 @@ function OrviboEmulator() {
             payload = "68640018636C" + this.hosts[index].macAddress + twenties + "0000000000";
           }
           this.sendMessage(this.hex2ba(payload),remote.address);
-          this.emit('subscription', index, remote.address);      
-          break;  
+          this.emit('subscription', index, remote.address);
+          break;
         case "6c73":
           payload = "686400186c73" + this.hosts[index].macAddress + twenties + "010000000000";
           this.sendMessage(this.hex2ba(payload),remote.address);
           this.emit('learning', index, remote.address);
-          break;            
+          break;
         case "7274":
           namepad = _s.rpad(this.hosts[index].name, 16, " ");
           namepad = new Buffer(namepad);
@@ -106,7 +106,7 @@ function OrviboEmulator() {
             tmp = parseInt(e).toString(16);
             ipHex = ipHex + _s.lpad(tmp, 2, "0");
           });
-        
+
           switch(MessageHex.substr(MessageHex.length - 14, 2)) {
             case "01":
               console.log("Table 1");
@@ -116,15 +116,15 @@ function OrviboEmulator() {
                 + "020000000001000100000600040004000200";
               break;
             case "04":
-              console.log("Table 4");              
+              console.log("Table 4");
               payload = "686400A87274" // Magic key, message length, command ID
-                + this.hosts[index].macAddress 
-                + twenties 
+                + this.hosts[index].macAddress
+                + twenties
                 + "020000000004000100008A0001004325" // Record number and other junk we don't care about :)
-                + this.hosts[index].macAddress 
-                + twenties 
+                + this.hosts[index].macAddress
+                + twenties
                 + _s.chop(this.hosts[index].macAddress, 2).reverse().join("")
-                + twenties 
+                + twenties
                 + "383838383838" // Remote password
                 + twenties // Padding for the remote password
                 + namepad.toString('hex') // Socket name including padding
@@ -150,7 +150,7 @@ function OrviboEmulator() {
               throw "Unhandled table data. Hex was: " + MessageHex.toString('hex');
               break;
           }
-          
+
           this.sendMessage(this.hex2ba(payload),remote.address);
           this.emit('queried', index, remote.address);
           break;
@@ -168,8 +168,8 @@ function OrviboEmulator() {
             + twenties
             + "0000000000";
           this.sendMessage(this.hex2ba(payload),remote.address);
-          this.emit('unknownB');            
-          break;              
+          this.emit('unknownB');
+          break;
         case "6463":
           console.log("Request to change state received");
           oldState = this.hosts[index].state;
@@ -193,7 +193,7 @@ OrviboEmulator.prototype.prepare = function() {
   if(os.type() == "Windows_NT") { // Windows will only work if we setBroadcast(true) in a callback
     console.log("Binding port " + port + " to host " + localIP + " using Windows method");
     scktClient.bind(port, function() {
-      scktClient.setBroadcast(true); // If we don't do this, we can't send broadcast packets to x.x.x.255, so we can never discover our sockets!    
+      scktClient.setBroadcast(true); // If we don't do this, we can't send broadcast packets to x.x.x.255, so we can never discover our sockets!
     });
   } else { // While node.js on Linux (Raspbian, but possibly other distros) will chuck the sads if we have a callback, even if the callback does absolutely nothing (possibly a bug)
     console.log("Binding port " + port + " to host " + localIP + " using Linux method");
@@ -222,9 +222,10 @@ OrviboEmulator.prototype.setState = function(index, sState) {
 OrviboEmulator.prototype.hosts = hosts;
 
 OrviboEmulator.prototype.sendMessage = function(message, sHost, callback) {
-    message = new Buffer(message); // We need to send as a buffer. this line takes our message and makes it into one. 
+  console.log("Sending message: " + Buffer(message).toString('hex') + " to " + sHost)
+    message = new Buffer(message); // We need to send as a buffer. this line takes our message and makes it into one.
     process.nextTick(function() { // Next time we're processing stuff. To keep our app from running away from us, I suppose
-    scktClient.send(message, 0, message.length, port, sHost, function(err, bytes) { // Send the message. Parameter 2 is offset, so it's 0. 
+    scktClient.send(message, 0, message.length, port, sHost, function(err, bytes) { // Send the message. Parameter 2 is offset, so it's 0.
       if (err) throw err; // Error? CRASH AND BURN BB!
       this.emit('sent', message, sHost);
     }.bind(this)); // Again, we do .bind(this) so calling this.emit(); comes from OrviboSocket, and not from scktClient
@@ -239,7 +240,7 @@ function getBroadcastAddress() { // A bit of code that lets us get our network I
   var addresses = [];
   for (k in interfaces) { // Loop through our interfaces
     for (k2 in interfaces[k]) { // And our sub-interfaces
-      var address = interfaces[k][k2]; // Get the address 
+      var address = interfaces[k][k2]; // Get the address
       if (address.family == 'IPv4' && !address.internal) { // If we're IPv4 and it's not an internal address (like 127.0.0.1)
         return address.address // Shove it onto our addresses array
       }
@@ -257,4 +258,4 @@ OrviboEmulator.prototype.hex2ba = function(hex) { // Takes a string of hex and t
   return arr;
 }
 
-module.exports = OrviboEmulator; // And make every OrviboSocket function available to whatever file wishes to use it. 
+module.exports = OrviboEmulator; // And make every OrviboSocket function available to whatever file wishes to use it.

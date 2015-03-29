@@ -16,30 +16,30 @@ o.on("discovering", function() {
 	c("Discovering sockets ..");
 });
 
-o.on('allonefound', function(index, addr, mac) { 
+o.on('allonefound', function(index, addr, mac) {
 	clearInterval(t);
-	c("Socket found! Index is " + index + ". Address is " + addr + " and MAC is " + mac + ". Subscribing .."); 
-	o.subscribe(); 
+	c("Socket found! Index is " + index + ". Address is " + addr + " and MAC is " + mac + ". Subscribing ..");
+	o.subscribe();
 	c("Rediscovering sockets ..");
 	o.discover();
 }) // We've found a socket. Subscribe to
 
 o.on('buttonpress', function(index) {
     c("Button was pressed on Orvibo: " + index);
-    c("Putting the AllOne into learning mode ..");
-    o.enterLearningMode(index);
+    c("Sending this raw thing ..");
+    o.sendMessage(o.hex2ba("6864001e6463accfdeadbeef2020202020208000000096dc012c00d8e4b8"))
 });
 
-o.on('subscribed', function(index, state) { 
+o.on('subscribed', function(index, state) {
 	c("Socket index " + index + " successfully subscribed.");
     console.dir(o.hosts);
-	o.query(); 
+	o.query();
 }); // We've subscribed to our device. Now we need to grab its name!
 
 o.on('queried', function(index, name) {
 	c("Socket " + index + " has a name: " + name);
     o.sendMessage(o.hex2ba("6864001e6564accf232a5ffa2020202020206a000000b28a0129007d27af"), o.hosts[index].ipaddress);
-    
+
 });
 
 o.on('emitting', function(index, ir) {
@@ -62,4 +62,3 @@ function c(text) {
 	console.log(text);
 }
 o.prepare();
-

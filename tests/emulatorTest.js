@@ -4,9 +4,9 @@ var o = new OrviboEmulator();
 
 
 /* To add new sockets, add to this array as necessary */
-o.hosts = 
+o.hosts =
 	[
-		{ 
+		{
 			index: 0,
 			name: "Dead Beef",
 			macAddress: "accfdeadbeef",
@@ -16,10 +16,10 @@ o.hosts =
 			ready: false,
             type: "allone"
 		},
-        	
+
 	];
-			
-			
+
+
 
 var readline = require('readline'),
 rl = readline.createInterface(process.stdin, process.stdout);
@@ -34,7 +34,7 @@ rl.prompt();
 rl.on('line', function(line) {
 	try {
         line = line.split(" ");
-    
+
         switch(line[0]) {
             case "status":
                 console.log("Status of virtual devices:");
@@ -51,36 +51,40 @@ rl.on('line', function(line) {
             case "button":
                 o.sendMessage(o.hex2ba("686400176469" + o.hosts[parseInt(line[1])].macAddress + "2020202020200000000000"), o.hosts[parseInt(line[1])].remote);
                 break;
+						case "raw":
+								o.sendMessage(o.hex2ba(line[2]), o.hosts[parseInt(line[1])].remote);
+							break;
             case "help":
                 console.log("Available commands:");
                 console.log("status - Displays the status of all emulated devices");
                 console.log("learn [index] - Puts an AllOne into learn mode. Example: learn 0");
+								console.log("raw [code] [index] - Sends a raw code back to the app")
                 console.log("toggle [index] - Toggles a socket on or off. Example: toggle 1");
                 console.log("button [index] - Simulate a button press on an AllOne. Example: button 0");
                 break;
             default:
                 console.log("Unknown command. Type help to see list of available commands");
                 break;
-            
+
         }
-		
+
 	} catch(ex) {
-		console.log("Error setting state. Error was: " + ex);	
+		console.log("Error setting state. Error was: " + ex);
 	}
-	
+
 	rl.prompt();
   });
-  
+
 o.on('messagereceived', function(data, ip) {
-	console.log("Data received: " + data.toString('hex') + " from " + ip); 
+	console.log("Data received: " + data.toString('hex') + " from " + ip);
 });
 
 o.on('discovery', function() {
-	console.log("Discovery"); 
+	console.log("Discovery");
 });
 
 o.on('unknownA', function() {
-	console.log("UA"); 
+	console.log("UA");
 });
 
 o.on('learning', function(index, address) {
@@ -90,20 +94,20 @@ o.on('learning', function(index, address) {
 });
 
 o.on('unknownB', function() {
-	console.log("UB"); 
+	console.log("UB");
 });
 
 
 o.on('subscription', function(index) {
-	console.log("Subscription"); 
+	console.log("Subscription");
 });
 
 o.on('query', function() {
-	console.log("Query"); 
+	console.log("Query");
 });
 
 
-  
+
 o.on('sent', function(data, ip) {
-	// console.log("Data SENT: " + data.toString('hex') + " to " + ip); 
+	// console.log("Data SENT: " + data.toString('hex') + " to " + ip);
 });
