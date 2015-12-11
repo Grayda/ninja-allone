@@ -3,6 +3,11 @@ ninja-allone
 
 Ninja Blocks driver for the Orvibo AllOne IR blaster. Control your TV, air conditioner, S10 sockets and other IR goodies from your Ninja Block!
 
+Important Notice
+================
+
+If you wish to use the Orvibo code (minus the Ninja Blocks stuff), check out the offshoot of this repo, [node-orvibo](http://github.com/Grayda/node-orvibo). You can install it with `npm install --save node-orvibo`. It's mostly the same as this library, but with (untested) RF support. Go check it out!
+
 Installation
 ============
 
